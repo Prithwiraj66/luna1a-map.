@@ -1,0 +1,88 @@
+<html>
+<head>
+    <title>Task 1A tkm Location Mapper</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        input { width: 150px; margin: 10px; padding: 8px; }
+        button { padding: 10px 30px; background: #007cba; color: white; border: none; cursor: pointer; }
+         #map {height: 300px; width: 90%; margin-top: 20px; border: 3px solid #ccc; }
+    </style>
+</head>
+<body>
+   <center><h1> find Latitude and Longitude</h1></center>
+   Latitude :<input type="number" id="lat" placeholder="Latitude (e.g.11.5647 )" step="any">
+    <br>
+    Longitude :<input type="number" id="lng"placeholder="Longitude (e.g. 75.6508)"  step="any">
+    <br>
+    <center><button onclick="updateMap()">press here Show Location</button></center>
+    <center><h2>your location: </h2>
+    <div id="placeBox" style="
+    width: 90%;
+    margin-top: 10px;
+    padding: 10px;
+    border: .2px solid ;
+    background: white;
+    font-size: 16px;
+">
+    Location name 
+</div></center>
+    <center><div id="map"></div></center>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([13.0827, 80.2707], 3);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    let lat = 11.564;
+    let lng = 75.6;
+
+    let marker = L.marker([lat, lng]).addTo(map);
+
+    const placeBox = document.getElementById("placeBox");
+    let rotation = setInterval(() => {
+        lng += 0.1;
+        if (lng > 180) lng = -180;
+        map.setView([lat, lng], map.getZoom(), { animate: true });
+    }, 100);
+
+    function updateMap() {
+        const inputLat = parseFloat(document.getElementById('lat').value);
+        const inputLng = parseFloat(document.getElementById('lng').value);
+
+        if (isNaN(inputLat) || isNaN(inputLng)) {
+            alert("Please enter valid Latitude and Longitude");
+            return;
+        }
+
+        // Stop Earth 
+        clearInterval(rotation);
+
+        lat = inputLat;
+        lng = inputLng;
+
+        marker.setLatLng([lat, lng]);
+        map.setView([lat, lng], 8);
+
+        // 📍 Get place name
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.display_name) {
+                    placeBox.innerHTML = "<b>Location:</b> " + data.display_name;
+                } else {
+                    placeBox.innerHTML = "Location name not found";
+                }
+            })
+            .catch(() => {
+                placeBox.innerHTML = "Error fetching location name";
+            });
+    }
+</script>
+
+
+</body>
+</html>
